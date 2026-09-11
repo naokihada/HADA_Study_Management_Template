@@ -1,0 +1,14 @@
+{
+  "domain_pack_id": "fortnite",
+  "display_name": "Fortnite",
+  "description": "Battle royale improvement through drop planning, mechanics practice, fight review, and endgame decisions.",
+  "goal_types": ["RANK_IMPROVEMENT", "MECHANICS_IMPROVEMENT", "TOURNAMENT_PREPARATION"],
+  "assessment_types": ["MATCH_RESULT", "RANK_UPDATE", "DRILL_RESULT", "REPLAY_REVIEW", "TOURNAMENT_RESULT"],
+  "activity_types": ["RANKED_MATCH", "CASUAL_MATCH", "AIM_PRACTICE", "BUILD_PRACTICE", "REPLAY_REVIEW", "TOURNAMENT"],
+  "event_types": ["TOURNAMENT", "SEASON_CHANGE", "LIMITED_EVENT", "PATCH_UPDATE", "OTHER"],
+  "metrics": [{"name":"win_rate","type":"percentage"},{"name":"placement","type":"number"},{"name":"eliminations","type":"integer"},{"name":"survival_minutes","type":"number"},{"name":"mechanics_success_rate","type":"percentage"}],
+  "recommendation_rules": [{"id":"early-fight-losses","condition":{"repeated_issue":"early_fight_loss"},"suggestion":"Review drop location, loot path, and first engagement before adding late-game drills."},{"id":"endgame-decision-problem","condition":{"repeated_issue":"endgame_decision"},"suggestion":"Create a limited endgame decision review for the next sprint."}],
+  "source_requirements": ["source_url", "checked_at", "season", "patch_version"],
+  "related_domains": ["tetris-99", "soulcalibur-6"],
+  "supports_artifacts": true
+}

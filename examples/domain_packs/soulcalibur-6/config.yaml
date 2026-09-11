@@ -1,0 +1,22 @@
+{
+  "domain_pack_id": "soulcalibur-6",
+  "display_name": "Soulcalibur VI",
+  "description": "A fighting-game improvement pack for match review, training drills, matchup study, and tournament preparation.",
+  "goal_types": ["RANK_IMPROVEMENT", "TOURNAMENT_PREPARATION", "MATCHUP_MASTERY"],
+  "assessment_types": ["MATCH_RESULT", "RANK_UPDATE", "DRILL_RESULT", "REPLAY_REVIEW", "TOURNAMENT_RESULT"],
+  "activity_types": ["RANKED_MATCH", "CASUAL_MATCH", "TRAINING_MODE", "REPLAY_REVIEW", "MATCHUP_STUDY", "TOURNAMENT"],
+  "event_types": ["TOURNAMENT", "ONLINE_EVENT", "PATCH_UPDATE", "OTHER"],
+  "metrics": [
+    {"name": "win_rate", "type": "percentage", "description": "Wins divided by completed matches."},
+    {"name": "punish_success_rate", "type": "percentage", "description": "Successful punish attempts."},
+    {"name": "combo_success_rate", "type": "percentage", "description": "Completed target combo attempts."},
+    {"name": "rank_points", "type": "number", "description": "Game-specific rank or rating value."}
+  ],
+  "recommendation_rules": [
+    {"id": "repeated-punish-failure", "condition": {"repeated_issue": "punish_failure"}, "suggestion": "Create a focused training-mode punish drill and review it after the next three sessions."},
+    {"id": "long-play-low-progress", "condition": {"high_play_time": true, "low_progress": true}, "suggestion": "Reduce unstructured matches and choose one measurable practice objective for the next sprint."}
+  ],
+  "source_requirements": ["source_url", "checked_at", "game_version", "patch_version"],
+  "related_domains": ["tekken-8", "dead-or-alive-6", "pokken-tournament"],
+  "supports_artifacts": true
+}

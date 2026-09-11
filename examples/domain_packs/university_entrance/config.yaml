@@ -1,0 +1,16 @@
+{
+  "domain_pack_id": "university-entrance",
+  "display_name": "大学受験",
+  "description": "Multiple universities, faculties, departments, and selection methods.",
+  "goal_types": ["UNIVERSITY_ENTRANCE"],
+  "assessment_types": ["COMMON_TEST", "INDIVIDUAL_EXAM", "MOCK_EXAM", "INTERVIEW", "ESSAY", "PRACTICAL_EXAM"],
+  "activity_types": ["KNOWLEDGE", "PRACTICE", "MOCK_TEST", "INTERVIEW_PRACTICE", "ESSAY_PRACTICE", "PRACTICAL"],
+  "event_types": ["APPLICATION", "EXAM", "RESULT", "MOCK_EXAM", "OTHER"],
+  "extensions": {
+    "faculty": {"type": "string", "required": false, "description": "Faculty or school."},
+    "department": {"type": "string", "required": false, "description": "Department or major."},
+    "selection_method": {"type": "string", "required": true, "description": "Selection method."},
+    "subject_weight": {"type": "number", "required": false, "description": "Subject weighting or points."}
+  },
+  "supports_artifacts": false
+}

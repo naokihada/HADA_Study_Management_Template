@@ -1,0 +1,24 @@
+{
+  "schema_version": "0.1.0",
+  "date_format": "YYYY-MM-DD",
+  "datetime_format": "ISO 8601 with offset",
+  "csv": {
+    "goals": {"required": ["goal_id", "title", "goal_type", "status", "priority", "start_date", "target_date"]},
+    "targets": {"required": ["target_id", "goal_id", "target_type", "name"]},
+    "subjects": {"required": ["subject_id", "name", "subject_type"]},
+    "resources": {"required": ["resource_id", "name", "resource_type"]},
+    "epics": {"required": ["epic_id", "goal_id", "title", "status", "priority"]},
+    "sprints": {"required": ["sprint_id", "name", "start_date", "end_date", "status"]},
+    "issues": {"required": ["issue_id", "issue_type", "title", "status", "priority", "sprint_id", "epic_id"]},
+    "subtasks": {"required": ["subtask_id", "issue_id", "title", "status", "priority"]},
+    "sessions": {"required": ["session_id", "date", "duration_minutes", "activity_type", "content"]},
+    "assessments": {"required": ["assessment_id", "target_id", "assessment_type", "assessment_date"]},
+    "events": {"required": ["event_id", "event_type", "title", "start_at", "all_day", "timezone", "importance", "status"]}
+  },
+  "photo": {
+    "root": "artifacts/<year>/",
+    "date_prefix_regex": "^[0-9]{8}",
+    "grouping": "filename date only",
+    "record_relationship": "none"
+  }
+}

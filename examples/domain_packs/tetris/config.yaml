@@ -1,0 +1,14 @@
+{
+  "domain_pack_id": "tetris",
+  "display_name": "Tetris",
+  "description": "General Tetris improvement for consistency, stacking, speed, decision quality, and review.",
+  "goal_types": ["SCORE_IMPROVEMENT", "SPEED_IMPROVEMENT", "COMPETITION_PREPARATION"],
+  "assessment_types": ["SCORE_RESULT", "TIME_RESULT", "RANK_RESULT", "DRILL_RESULT", "REPLAY_REVIEW"],
+  "activity_types": ["STANDARD_PLAY", "SPRINT_PRACTICE", "STACKING_PRACTICE", "REPLAY_REVIEW", "COMPETITION"],
+  "event_types": ["COMPETITION", "PERSONAL_BEST", "RULESET_CHANGE", "OTHER"],
+  "metrics": [{"name":"score","type":"number"},{"name":"lines","type":"integer"},{"name":"time_seconds","type":"number"},{"name":"top_out_rate","type":"percentage"},{"name":"accuracy_rate","type":"percentage"}],
+  "recommendation_rules": [{"id":"repeated-top-out","condition":{"repeated_issue":"top_out"},"suggestion":"Review stack height and recovery choices, then use a constrained stacking drill."},{"id":"speed-with-low-consistency","condition":{"high_speed":true,"low_consistency":true},"suggestion":"Reduce speed temporarily and prioritize repeatable placement decisions."}],
+  "source_requirements": ["source_url", "checked_at", "ruleset"],
+  "related_domains": ["tetris-99", "puyo-puyo-tetris"],
+  "supports_artifacts": false
+}

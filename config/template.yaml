@@ -1,0 +1,12 @@
+{
+  "template_id": "hada-study-management-template",
+  "template_version": "0.1.0",
+  "schema_version": "0.1.0",
+  "timezone": "Asia/Tokyo",
+  "learner_mode": "single",
+  "photo_root": "artifacts",
+  "allowed_photo_extensions": [".jpg", ".jpeg", ".png", ".webp"],
+  "issue_statuses": ["BACKLOG", "TODO", "IN_PROGRESS", "BLOCKED", "IN_REVIEW", "DONE", "CANCELLED"],
+  "issue_priorities": ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
+  "event_types": ["EXAM", "MOCK_EXAM", "APPLICATION", "RESULT", "PRACTICAL_EXAM", "ACCOMMODATION", "PARKING", "OTHER"]
+}

@@ -1,0 +1,8 @@
+{
+  "domain_pack_id": "second-class-electrician",
+  "display_name": "第二種電気工事士",
+  "goal_types": ["QUALIFICATION"],
+  "assessment_types": ["WRITTEN_EXAM", "PRACTICE_TEST", "PRACTICAL_EXAM"],
+  "activity_types": ["KNOWLEDGE", "PRACTICE", "PRACTICAL", "REVIEW"],
+  "supports_artifacts": true
+}

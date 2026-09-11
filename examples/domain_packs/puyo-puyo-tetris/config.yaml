@@ -1,0 +1,14 @@
+{
+  "domain_pack_id": "puyo-puyo-tetris",
+  "display_name": "Puyo Puyo Tetris",
+  "description": "Hybrid puzzle improvement across Tetris, Puyo Puyo, modes, rulesets, and versus review.",
+  "goal_types": ["MODE_MASTERY", "SCORE_IMPROVEMENT", "COMPETITION_PREPARATION"],
+  "assessment_types": ["MATCH_RESULT", "SCORE_RESULT", "RANK_RESULT", "DRILL_RESULT", "REPLAY_REVIEW"],
+  "activity_types": ["TETRIS_PLAY", "PUYO_PLAY", "VERSUS_MATCH", "DRILL_PRACTICE", "REPLAY_REVIEW", "COMPETITION"],
+  "event_types": ["COMPETITION", "PERSONAL_BEST", "RULESET_CHANGE", "OTHER"],
+  "metrics": [{"name":"score","type":"number"},{"name":"win_rate","type":"percentage"},{"name":"chain_count","type":"integer"},{"name":"lines","type":"integer"},{"name":"mode_consistency","type":"percentage"}],
+  "recommendation_rules": [{"id":"mode-switch-confusion","condition":{"repeated_issue":"mode_switch_error"},"suggestion":"Separate Tetris and Puyo Puyo objectives into different sprints before comparing them."},{"id":"versus-decision-problem","condition":{"repeated_issue":"versus_decision"},"suggestion":"Review attack timing and defensive choices from a small set of matches."}],
+  "source_requirements": ["source_url", "checked_at", "ruleset", "mode"],
+  "related_domains": ["tetris", "tetris-99"],
+  "supports_artifacts": false
+}

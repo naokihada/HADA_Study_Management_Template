@@ -1,0 +1,14 @@
+{
+  "domain_pack_id": "dead-or-alive-6",
+  "display_name": "Dead or Alive 6",
+  "description": "Fighting-game improvement for neutral, holds, counter timing, wall situations, and matchup review.",
+  "goal_types": ["RANK_IMPROVEMENT", "MATCHUP_MASTERY", "TOURNAMENT_PREPARATION"],
+  "assessment_types": ["MATCH_RESULT", "RANK_UPDATE", "DRILL_RESULT", "REPLAY_REVIEW", "TOURNAMENT_RESULT"],
+  "activity_types": ["RANKED_MATCH", "CASUAL_MATCH", "TRAINING_MODE", "REPLAY_REVIEW", "MATCHUP_STUDY", "TOURNAMENT"],
+  "event_types": ["TOURNAMENT", "ONLINE_EVENT", "PATCH_UPDATE", "OTHER"],
+  "metrics": [{"name":"win_rate","type":"percentage"},{"name":"hold_success_rate","type":"percentage"},{"name":"wall_escape_success_rate","type":"percentage"},{"name":"rank_points","type":"number"}],
+  "recommendation_rules": [{"id":"hold-timing-problem","condition":{"repeated_issue":"hold_timing"},"suggestion":"Create a controlled hold-timing drill and review defensive choices after three sessions."},{"id":"wall-loss-pattern","condition":{"repeated_issue":"wall_loss"},"suggestion":"Prioritize wall escape and positional decision drills before adding new offensive options."}],
+  "source_requirements": ["source_url", "checked_at", "game_version", "patch_version"],
+  "related_domains": ["soulcalibur-6", "tekken-8", "pokken-tournament"],
+  "supports_artifacts": true
+}

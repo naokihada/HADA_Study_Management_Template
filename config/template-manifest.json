@@ -1,0 +1,12 @@
+{
+  "template_id": "hada-study-management-template",
+  "template_version": "0.1.0",
+  "schema_version": "0.1.0",
+  "ownership": {
+    "template_owned": ["AGENTS.md", "README.md", "config/**", "tools/**", "tests/**", "templates/**", "prompts/**"],
+    "user_owned": ["data/**", "plans/**", "records/**", "artifacts/**", "config/project-state.yaml", "config/domain-compatibility.yaml"],
+    "generated": ["reports/**", "records/**/summaries/**"]
+  },
+  "migration_paths": [],
+  "notes": "Release migration must compare Previous Template, Current Project, and New Template. This manifest is a v0.1 design contract."
+}

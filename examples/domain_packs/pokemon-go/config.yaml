@@ -1,0 +1,14 @@
+{
+  "domain_pack_id": "pokemon-go",
+  "display_name": "Pokémon GO",
+  "description": "Long-term collection, event, raid, walking, and PvP goals with time-limited planning.",
+  "goal_types": ["COLLECTION", "EVENT_COMPLETION", "PVP_IMPROVEMENT", "WALKING_GOAL"],
+  "assessment_types": ["COLLECTION_STATUS", "RAID_RESULT", "PVP_RESULT", "DISTANCE_RESULT", "RESOURCE_REVIEW"],
+  "activity_types": ["CATCHING", "RAID", "PVP_BATTLE", "WALKING", "EVENT_RESEARCH", "RESOURCE_PLANNING"],
+  "event_types": ["LIMITED_EVENT", "COMMUNITY_EVENT", "RAID_EVENT", "SEASON_CHANGE", "OTHER"],
+  "metrics": [{"name":"collection_count","type":"integer"},{"name":"raid_success_rate","type":"percentage"},{"name":"pvp_win_rate","type":"percentage"},{"name":"walking_distance","type":"number"},{"name":"event_completion_rate","type":"percentage"}],
+  "recommendation_rules": [{"id":"time-limited-goal-risk","condition":{"deadline_near":true,"low_progress":true},"suggestion":"Prioritize the minimum actions needed for the selected event goal and record the tradeoff."},{"id":"resource-planning-problem","condition":{"repeated_issue":"resource_shortage"},"suggestion":"Create a resource plan before the next event and separate essential from optional targets."}],
+  "source_requirements": ["source_url", "checked_at", "season", "event_date"],
+  "related_domains": ["tetris-99"],
+  "supports_artifacts": true
+}

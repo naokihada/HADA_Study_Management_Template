@@ -1,0 +1,14 @@
+{
+  "domain_pack_id": "tekken-8",
+  "display_name": "Tekken 8",
+  "description": "Fighting-game improvement through match review, punishment, matchup study, and tournament preparation.",
+  "goal_types": ["RANK_IMPROVEMENT", "TOURNAMENT_PREPARATION", "MATCHUP_MASTERY"],
+  "assessment_types": ["MATCH_RESULT", "RANK_UPDATE", "DRILL_RESULT", "REPLAY_REVIEW", "TOURNAMENT_RESULT"],
+  "activity_types": ["RANKED_MATCH", "CASUAL_MATCH", "PRACTICE_MODE", "REPLAY_REVIEW", "MATCHUP_STUDY", "TOURNAMENT"],
+  "event_types": ["TOURNAMENT", "ONLINE_EVENT", "PATCH_UPDATE", "OTHER"],
+  "metrics": [{"name":"win_rate","type":"percentage"},{"name":"punish_success_rate","type":"percentage"},{"name":"combo_success_rate","type":"percentage"},{"name":"rank_points","type":"number"}],
+  "recommendation_rules": [{"id":"repeated-punish-failure","condition":{"repeated_issue":"punish_failure"},"suggestion":"Create a focused practice-mode punishment drill for the next sprint."},{"id":"low-progress-after-heavy-play","condition":{"high_play_time":true,"low_progress":true},"suggestion":"Replace unstructured matches with one measurable training objective."}],
+  "source_requirements": ["source_url", "checked_at", "game_version", "patch_version"],
+  "related_domains": ["soulcalibur-6", "dead-or-alive-6", "pokken-tournament"],
+  "supports_artifacts": true
+}

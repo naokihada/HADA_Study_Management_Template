@@ -1,0 +1,14 @@
+{
+  "domain_pack_id": "tetris-99",
+  "display_name": "Tetris 99",
+  "description": "Battle-royale puzzle improvement for survival, targeting, pressure management, and placement.",
+  "goal_types": ["RANK_IMPROVEMENT", "SURVIVAL_IMPROVEMENT", "COMPETITION_PREPARATION"],
+  "assessment_types": ["MATCH_RESULT", "PLACEMENT_RESULT", "DRILL_RESULT", "REPLAY_REVIEW", "EVENT_RESULT"],
+  "activity_types": ["BATTLE_ROYALE_MATCH", "SPRINT_PRACTICE", "TARGETING_PRACTICE", "REPLAY_REVIEW", "EVENT"],
+  "event_types": ["EVENT", "PERSONAL_BEST", "RULESET_CHANGE", "OTHER"],
+  "metrics": [{"name":"placement","type":"number"},{"name":"survival_time","type":"number"},{"name":"badges","type":"integer"},{"name":"top_out_rate","type":"percentage"}],
+  "recommendation_rules": [{"id":"early-pressure-loss","condition":{"repeated_issue":"early_pressure_loss"},"suggestion":"Review targeting choices and practice controlled responses to incoming pressure."},{"id":"late-survival-problem","condition":{"repeated_issue":"late_survival"},"suggestion":"Create a late-game survival sprint and compare placement over three sessions."}],
+  "source_requirements": ["source_url", "checked_at", "ruleset"],
+  "related_domains": ["tetris", "puyo-puyo-tetris"],
+  "supports_artifacts": false
+}

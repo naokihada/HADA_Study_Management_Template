@@ -1,0 +1,16 @@
+{
+  "families": {
+    "qualification": ["second-class-electrician", "first-class-electrician", "hazardous-materials-class4", "hazardous-materials-class5", "hazardous-materials-class-a"],
+    "entrance-exam": ["high-school-entrance", "university-entrance"],
+    "competitive-gaming": ["soulcalibur-6", "tekken-8", "dead-or-alive-6", "pokken-tournament", "fortnite", "tetris", "tetris-99", "puyo-puyo-tetris", "pokemon-go"],
+    "activity": ["jogging", "swimming", "motorcycle-maintenance", "pet-growth", "cooking", "meal-planning", "nature-walk", "photo-journal"],
+    "research": ["summer-research"],
+    "creative": ["creative-idea-log", "anime-diary"]
+  },
+  "related_upgrades": {
+    "second-class-electrician": ["first-class-electrician"],
+    "hazardous-materials-class4": ["hazardous-materials-class5", "hazardous-materials-class-a"],
+    "high-school-entrance": ["university-entrance"],
+    "soulcalibur-6": ["tekken-8", "dead-or-alive-6", "pokken-tournament"]
+  }
+}

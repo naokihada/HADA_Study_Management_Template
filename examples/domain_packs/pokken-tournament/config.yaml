@@ -1,0 +1,14 @@
+{
+  "domain_pack_id": "pokken-tournament",
+  "display_name": "Pokkén Tournament",
+  "description": "Competitive practice for phase management, character plans, replay review, and event preparation.",
+  "goal_types": ["RANK_IMPROVEMENT", "CHARACTER_MASTERY", "TOURNAMENT_PREPARATION"],
+  "assessment_types": ["MATCH_RESULT", "RANK_UPDATE", "DRILL_RESULT", "REPLAY_REVIEW", "TOURNAMENT_RESULT"],
+  "activity_types": ["RANKED_MATCH", "CASUAL_MATCH", "TRAINING_MODE", "REPLAY_REVIEW", "MATCHUP_STUDY", "TOURNAMENT"],
+  "event_types": ["TOURNAMENT", "ONLINE_EVENT", "PATCH_UPDATE", "OTHER"],
+  "metrics": [{"name":"win_rate","type":"percentage"},{"name":"phase_transition_success_rate","type":"percentage"},{"name":"support_choice_success_rate","type":"percentage"},{"name":"rank_points","type":"number"}],
+  "recommendation_rules": [{"id":"phase-transition-problem","condition":{"repeated_issue":"phase_transition"},"suggestion":"Separate field-phase and duel-phase drills and measure each one independently."},{"id":"support-choice-problem","condition":{"repeated_issue":"support_choice"},"suggestion":"Limit the next sprint to a small support set and review decision quality."}],
+  "source_requirements": ["source_url", "checked_at", "game_version", "patch_version"],
+  "related_domains": ["soulcalibur-6", "tekken-8", "dead-or-alive-6"],
+  "supports_artifacts": true
+}

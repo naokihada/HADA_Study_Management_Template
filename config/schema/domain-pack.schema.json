@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hada.example/schemas/domain-pack.schema.json",
+  "title": "HADA Study Management Domain Pack",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["domain_pack_id", "display_name", "goal_types", "assessment_types", "activity_types", "supports_artifacts"],
+  "properties": {
+    "domain_pack_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+    "display_name": {"type": "string", "minLength": 1},
+    "description": {"type": "string"},
+    "goal_types": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1, "uniqueItems": true},
+    "assessment_types": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "activity_types": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "event_types": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "metrics": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["name", "type"], "properties": {"name": {"type": "string", "minLength": 1}, "type": {"type": "string"}, "description": {"type": "string"}}}, "uniqueItems": true},
+    "recommendation_rules": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["id", "suggestion"], "properties": {"id": {"type": "string", "minLength": 1}, "condition": {"type": "object"}, "suggestion": {"type": "string", "minLength": 1}}}},
+    "source_requirements": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "related_domains": {"type": "array", "items": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"}, "uniqueItems": true},
+    "extensions": {
+      "type": "object",
+      "additionalProperties": {"type": "object", "additionalProperties": false, "required": ["type"], "properties": {"type": {"type": "string"}, "required": {"type": "boolean"}, "description": {"type": "string"}}}
+    },
+    "supports_artifacts": {"type": "boolean"}
+  }
+}
