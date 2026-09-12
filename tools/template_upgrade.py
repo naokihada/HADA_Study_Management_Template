@@ -6,7 +6,35 @@ import argparse
 import fnmatch
 import json
 import shutil
+import re
 from pathlib import Path
+
+VERSION = re.compile(r"^\d+\.\d+\.\d+$")
+
+
+def validate_manifest(manifest: dict) -> list[str]:
+    errors = []
+    for field in ("template_id", "template_version", "schema_version", "data_format_version"):
+        if not manifest.get(field):
+            errors.append(f"manifest missing {field}")
+    for field in ("template_version", "schema_version", "data_format_version"):
+        if manifest.get(field) and not VERSION.fullmatch(str(manifest[field])):
+            errors.append(f"manifest {field} must use MAJOR.MINOR.PATCH")
+    contract = manifest.get("upgrade_contract")
+    if not isinstance(contract, dict):
+        errors.append("manifest missing upgrade_contract")
+    else:
+        if contract.get("baseline") != manifest.get("template_version"):
+            errors.append("manifest upgrade_contract.baseline must equal template_version")
+        if contract.get("comparison") != ["previous_template", "current_project", "new_template"]:
+            errors.append("manifest upgrade_contract.comparison must define P/C/N order")
+        if contract.get("user_data_policy") != "preserve":
+            errors.append("manifest upgrade_contract.user_data_policy must be preserve")
+        if contract.get("automatic_deletion") is not False:
+            errors.append("manifest upgrade_contract.automatic_deletion must be false")
+        if contract.get("git_operations") != "manual":
+            errors.append("manifest upgrade_contract.git_operations must be manual")
+    return errors
 
 
 def files(root: Path) -> set[str]:
@@ -81,6 +109,12 @@ def main() -> int:
     parser.add_argument("--apply", action="store_true", help="apply only AUTO template-owned changes; never delete files")
     args = parser.parse_args()
     manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
+    errors = validate_manifest(manifest)
+    if errors:
+        print("STATUS: INVALID_MANIFEST")
+        for error in errors:
+            print("ERROR: " + error)
+        return 2
     print("STATUS: DRY_RUN")
     print("P=" + str(args.previous.resolve()))
     print("C=" + str(args.current.resolve()))

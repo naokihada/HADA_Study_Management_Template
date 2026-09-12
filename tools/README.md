@@ -1,6 +1,6 @@
 # Study Management CLI
 
-The v0.1 foundation uses the Python standard library only.
+The v1.0.0 foundation uses the Python standard library only.
 
 Run commands from the repository root:
 

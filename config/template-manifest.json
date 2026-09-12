@@ -1,12 +1,29 @@
 {
   "template_id": "hada-study-management-template",
-  "template_version": "0.1.0",
-  "schema_version": "0.1.0",
+  "template_version": "1.0.0",
+  "schema_version": "1.0.0",
+  "data_format_version": "1.0.0",
   "ownership": {
-    "template_owned": ["AGENTS.md", "README.md", "config/**", "tools/**", "tests/**", "templates/**", "prompts/**"],
+    "template_owned": ["AGENTS.md", "SPEC.md", "README.md", "config/**", "tools/**", "tests/**", "templates/**", "prompts/**"],
     "user_owned": ["data/**", "plans/**", "records/**", "artifacts/**", "config/project-state.yaml", "config/domain-compatibility.yaml"],
     "generated": ["reports/**", "records/**/summaries/**"]
   },
-  "migration_paths": [],
-  "notes": "Release migration must compare Previous Template, Current Project, and New Template. This manifest is a v0.1 design contract."
+  "migration_paths": [
+    {
+      "from": "1.0.0",
+      "to": "2.0.0",
+      "status": "future",
+      "strategy": "three-way-review",
+      "automatic_data_migration": false
+    }
+  ],
+  "upgrade_contract": {
+    "baseline": "1.0.0",
+    "comparison": ["previous_template", "current_project", "new_template"],
+    "user_data_policy": "preserve",
+    "automatic_deletion": false,
+    "git_operations": "manual",
+    "unknown_state": "review_required"
+  },
+  "notes": "v1.0.0 is a stable file-format baseline. Future upgrades must use three-way comparison and explicit migration review."
 }

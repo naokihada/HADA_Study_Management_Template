@@ -97,6 +97,17 @@ class StudyCliTests(unittest.TestCase):
             self.assertEqual(applied, ["tools/check.py"])
             self.assertEqual((current / "tools" / "check.py").read_text(encoding="utf-8"), "new")
 
+    def test_v1_upgrade_manifest_is_stable_and_three_way(self):
+        root = Path(__file__).resolve().parents[1]
+        manifest = study_cli.load_json_file(root / "config" / "template-manifest.json")
+        self.assertEqual(manifest["template_version"], "1.0.0")
+        self.assertEqual(manifest["schema_version"], "1.0.0")
+        self.assertEqual(manifest["data_format_version"], "1.0.0")
+        self.assertEqual(manifest["upgrade_contract"]["user_data_policy"], "preserve")
+        self.assertEqual(manifest["upgrade_contract"]["comparison"], ["previous_template", "current_project", "new_template"])
+        self.assertFalse(manifest["upgrade_contract"]["automatic_deletion"])
+        self.assertEqual(template_upgrade.validate_manifest(manifest), [])
+
     def test_domain_pack_schema(self):
         root = Path(__file__).resolve().parents[1]
         pack_paths = sorted((root / "examples/domain_packs").glob("*/config.yaml"))
@@ -145,6 +156,29 @@ class StudyCliTests(unittest.TestCase):
             (root / "AI" / "data").mkdir(parents=True)
             errors, warnings, counts = study_cli.validate(root)
             self.assertTrue(any("AI boundary violation" in error for error in errors))
+
+    def test_core_stage_metric_and_visibility_contracts(self):
+        root = Path(__file__).resolve().parents[1]
+        errors, warnings, counts = study_cli.validate(root)
+        self.assertEqual(errors, [], "\n".join(errors))
+        if (root / "data" / "master" / "stages.csv").exists():
+            self.assertGreaterEqual(counts["stages"], 2)
+        if (root / "data" / "master" / "metrics.csv").exists():
+            self.assertGreaterEqual(counts["metrics"], 2)
+        if (root / "records" / "default" / "metric_observations.csv").exists():
+            self.assertGreaterEqual(counts["metric_observations"], 2)
+
+    def test_invalid_visibility_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "config").mkdir()
+            (root / "config" / "template.yaml").write_text('{"default_visibility":"private","visibility_values":["private","summary","public"]}', encoding="utf-8")
+            (root / "data" / "master").mkdir(parents=True)
+            (root / "data" / "master" / "goals.csv").write_text(
+                "goal_id,title,goal_type,status,priority,start_date,target_date,visibility\n"
+                "goal-1,Test,study,PLANNED,LOW,2026-01-01,2026-12-31,secret\n", encoding="utf-8")
+            errors, warnings, counts = study_cli.validate(root)
+            self.assertTrue(any("visibility must be private" in error for error in errors))
 
 
 if __name__ == "__main__":

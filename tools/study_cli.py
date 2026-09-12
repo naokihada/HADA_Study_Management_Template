@@ -17,6 +17,8 @@ from zoneinfo import ZoneInfo
 
 CSV_CONTRACTS = {
     "data/master/goals.csv": ("goal_id", "title", "goal_type", "status", "priority", "start_date", "target_date"),
+    "data/master/stages.csv": ("stage_id", "goal_id", "name", "start_date", "end_date", "status", "sequence"),
+    "data/master/metrics.csv": ("metric_id", "name", "unit", "direction"),
     "data/master/targets.csv": ("target_id", "goal_id", "target_type", "name"),
     "data/master/subjects.csv": ("subject_id", "name", "subject_type"),
     "data/master/resources.csv": ("resource_id", "name", "resource_type"),
@@ -26,6 +28,7 @@ CSV_CONTRACTS = {
     "plans/default/subtasks.csv": ("subtask_id", "issue_id", "title", "status", "priority"),
     "records/default/sessions.csv": ("session_id", "date", "duration_minutes", "activity_type", "content"),
     "records/default/assessments.csv": ("assessment_id", "target_id", "assessment_type", "assessment_date"),
+    "records/default/metric_observations.csv": ("observation_id", "metric_id", "observed_at", "value"),
     "records/default/events.csv": ("event_id", "event_type", "title", "start_at", "all_day", "timezone", "importance", "status"),
 }
 PROJECT_CSV_CONTRACTS = {
@@ -35,16 +38,20 @@ PROJECT_CSV_CONTRACTS = {
     "subtasks.csv": ("subtask_id", "issue_id", "title", "status", "priority"),
     "sessions.csv": ("session_id", "date", "duration_minutes", "activity_type", "content"),
     "assessments.csv": ("assessment_id", "target_id", "assessment_type", "assessment_date"),
+    "metric_observations.csv": ("observation_id", "metric_id", "observed_at", "value"),
     "events.csv": ("event_id", "event_type", "title", "start_at", "all_day", "timezone", "importance", "status"),
 }
 ID_COLUMNS = {
     "goal_id": "goals", "target_id": "targets", "subject_id": "subjects", "resource_id": "resources",
     "epic_id": "epics", "sprint_id": "sprints", "issue_id": "issues", "subtask_id": "subtasks",
     "session_id": "sessions", "assessment_id": "assessments", "event_id": "events",
+    "stage_id": "stages", "current_stage_id": "stages", "transition_event_id": "events",
+    "metric_id": "metrics", "observation_id": "metric_observations",
 }
 DATE_FIELDS = {"date", "start_date", "end_date", "target_date", "due_date", "assessment_date"}
 PHOTO_DATE = re.compile(r"^(?P<date>\d{8})")
 DOMAIN_ID = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+VISIBILITY_VALUES = {"private", "summary", "public"}
 
 
 def load_config(root: Path) -> dict:
@@ -52,7 +59,7 @@ def load_config(root: Path) -> dict:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError:
-        return {"timezone": "Asia/Tokyo", "photo_root": "artifacts", "allowed_photo_extensions": [".jpg", ".jpeg", ".png", ".webp"]}
+        return {"timezone": "Asia/Tokyo", "photo_root": "artifacts", "allowed_photo_extensions": [".jpg", ".jpeg", ".png", ".webp"], "default_visibility": "private", "visibility_values": sorted(VISIBILITY_VALUES)}
 
 
 def load_json_file(path: Path, default: dict | None = None) -> dict:
@@ -255,6 +262,16 @@ def validate(root: Path) -> tuple[list[str], list[str], dict[str, int]]:
     warnings: list[str] = []
     config = load_config(root)
     validate_timezone(str(config.get("timezone", "Asia/Tokyo")), "config:timezone", errors)
+    visibility_values = set(config.get("visibility_values", VISIBILITY_VALUES))
+    if not visibility_values.issubset(VISIBILITY_VALUES):
+        errors.append("config:visibility_values may only contain private, summary, public")
+    if str(config.get("default_visibility", "private")) not in visibility_values:
+        errors.append("config:default_visibility must be one of the configured visibility values")
+    learner_profile = load_json_file(root / "data" / "learner" / "learner.yaml", {})
+    if learner_profile:
+        profile_visibility = str(learner_profile.get("visibility", "private"))
+        if profile_visibility not in visibility_values:
+            errors.append("data/learner/learner.yaml: visibility must be private, summary, or public")
     ids: dict[str, set[str]] = defaultdict(set)
     rows_by_path: dict[str, list[dict[str, str]]] = {}
     for relative, required, path in contract_paths(root):
@@ -282,17 +299,17 @@ def validate(root: Path) -> tuple[list[str], list[str], dict[str, int]]:
                     parse_datetime(row[field].strip(), f"{relative}:{index}:{field}", errors)
             if "timezone" in row and row["timezone"].strip():
                 validate_timezone(row["timezone"].strip(), f"{relative}:{index}:timezone", errors)
+            if "visibility" in row and row["visibility"].strip() and row["visibility"].strip() not in visibility_values:
+                errors.append(f"{relative}:{index}: visibility must be private, summary, or public")
             if "all_day" in row and row["all_day"].strip().lower() not in {"true", "false"}:
                 errors.append(f"{relative}:{index}: all_day must be true or false")
             for field, kind in ID_COLUMNS.items():
                 if field in row and row[field].strip():
                     entity_id = row[field].strip()
-                    if field == "subtask_id" or field.endswith("_id"):
-                        if field in ("goal_id", "target_id", "subject_id", "resource_id", "epic_id", "sprint_id", "issue_id", "subtask_id", "session_id", "assessment_id", "event_id"):
-                            if field in ("goal_id", "target_id", "subject_id", "resource_id", "epic_id", "sprint_id", "issue_id", "subtask_id", "session_id", "assessment_id", "event_id") and field == headers[0]:
-                                if entity_id in ids[kind]:
-                                    errors.append(f"{relative}:{index}: duplicate {field} {entity_id!r}")
-                                ids[kind].add(entity_id)
+                    if field.endswith("_id") and field == headers[0]:
+                        if entity_id in ids[kind]:
+                            errors.append(f"{relative}:{index}: duplicate {field} {entity_id!r}")
+                        ids[kind].add(entity_id)
             if "started_at" in row and "ended_at" in row and row["started_at"] and row["ended_at"]:
                 start = parse_datetime(row["started_at"], f"{relative}:{index}:started_at", errors)
                 end = parse_datetime(row["ended_at"], f"{relative}:{index}:ended_at", errors)
@@ -310,6 +327,27 @@ def validate(root: Path) -> tuple[list[str], list[str], dict[str, int]]:
                         errors.append(f"{relative}:{index}: percentage must be between 0 and 100")
                 except ValueError:
                     errors.append(f"{relative}:{index}: percentage must be numeric")
+            if "value" in row and row["value"].strip():
+                try:
+                    float(row["value"])
+                except ValueError:
+                    errors.append(f"{relative}:{index}: value must be numeric")
+            if "target_value" in row and row["target_value"].strip():
+                try:
+                    float(row["target_value"])
+                except ValueError:
+                    errors.append(f"{relative}:{index}: target_value must be numeric")
+            if relative.endswith("/stages.csv") and row.get("sequence", "").strip():
+                try:
+                    int(row["sequence"])
+                except ValueError:
+                    errors.append(f"{relative}:{index}: sequence must be an integer")
+            if relative.endswith("/stages.csv") and row.get("start_date") and row.get("end_date"):
+                try:
+                    if datetime.strptime(row["end_date"], "%Y-%m-%d") < datetime.strptime(row["start_date"], "%Y-%m-%d"):
+                        errors.append(f"{relative}:{index}: end_date is before start_date")
+                except ValueError:
+                    pass
             if "status" in row and row["status"].strip():
                 allowed_statuses = set(config.get("issue_statuses", [])) | {"ACTIVE", "PLANNED", "DONE", "CANCELLED", "DRAFT", "ARCHIVED"}
                 if allowed_statuses and row["status"].strip() not in allowed_statuses:
@@ -420,7 +458,7 @@ def summary(root: Path) -> str:
 
 
 def init_project(root: Path) -> str:
-    directories = ["config/schema", "data/learner", "data/master", "data/inbox", "plans/default", "records/default/reviews", "artifacts", "AI/working", "AI/cache", "AI/reports", "AI/history", "tools", "tests"]
+    directories = ["config/schema", "data/learner", "data/learner/history", "data/master", "data/inbox", "plans/default", "records/default/reviews", "artifacts", "AI/working", "AI/cache", "AI/reports", "AI/history", "tools", "tests"]
     created = 0
     for directory in directories:
         path = root / directory
