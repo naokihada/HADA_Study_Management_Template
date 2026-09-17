@@ -10,5 +10,6 @@ Allowed disposable areas:
 - `cache/` — rebuildable cache
 - `reports/` — temporary generated reports
 - `history/` — non-user operational history that must be promoted or removed deliberately
+- `handoff/` — disposable request/result evidence; do not store user data
 
 `python tools/study_cli.py ai-reset` removes only `working/`, `cache/`, and `reports/`. It never removes `data/`, `plans/`, `records/`, or `artifacts/`, and it does not erase ChatGPT or another AI provider's conversation history.

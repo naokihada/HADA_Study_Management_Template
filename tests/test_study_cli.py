@@ -100,7 +100,7 @@ class StudyCliTests(unittest.TestCase):
     def test_v1_upgrade_manifest_is_stable_and_three_way(self):
         root = Path(__file__).resolve().parents[1]
         manifest = study_cli.load_json_file(root / "config" / "template-manifest.json")
-        self.assertEqual(manifest["template_version"], "1.0.0")
+        self.assertEqual(manifest["template_version"], "1.1.0")
         self.assertEqual(manifest["schema_version"], "1.0.0")
         self.assertEqual(manifest["data_format_version"], "1.0.0")
         self.assertEqual(manifest["upgrade_contract"]["user_data_policy"], "preserve")
