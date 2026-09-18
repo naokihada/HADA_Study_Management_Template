@@ -1,6 +1,6 @@
 # HADA Study Management Template
 
-バージョン: `1.1.0`（Stable v1 baseline）
+バージョン: `1.1.1`（Stable v1 baseline）
 
 高校受験、大学受験、資格・技能試験、作品制作をファイルベースで管理する
 汎用テンプレートです。

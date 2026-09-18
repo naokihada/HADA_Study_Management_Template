@@ -8,10 +8,14 @@ def main():
     parser.add_argument('--root', type=Path, default=Path.cwd())
     root = parser.parse_args().root.resolve()
     manifest = json.loads((root / 'config/template-manifest.json').read_text(encoding='utf-8'))
+    common = json.loads((root / 'config/template.manifest.yaml').read_text(encoding='utf-8'))
     base = (root / 'TEMPLATE_BASE.md').read_text(encoding='utf-8')
     errors = []
     if f"Template ID: `{manifest.get('template_id')}`" not in base: errors.append('TEMPLATE_BASE template id mismatch')
     if f"Version: `{manifest.get('template_version')}`" not in base: errors.append('TEMPLATE_BASE version mismatch')
+    if common.get('template', {}).get('id') != manifest.get('template_id'): errors.append('common manifest template id mismatch')
+    if common.get('template', {}).get('version') != manifest.get('template_version'): errors.append('common manifest template version mismatch')
+    if common.get('compatibility', {}).get('schema_version') != manifest.get('schema_version'): errors.append('common manifest schema mismatch')
     paths = [p for p in root.rglob('*') if p.is_file() and '.git' not in p.relative_to(root).parts and '__pycache__' not in p.relative_to(root).parts and p.suffix not in {'.pyc', '.pyo'}]
     errors.extend(f'lone CR: {p.relative_to(root).as_posix()}' for p in paths if b'\r' in p.read_bytes().replace(b'\r\n', b''))
     errors.extend(f'path over 260: {p.relative_to(root).as_posix()}' for p in paths if len(str(p.resolve())) > 260)

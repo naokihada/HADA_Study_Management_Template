@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["manifest_version", "template", "compatibility", "files"],
+  "properties": {
+    "manifest_version": {"type": "string"},
+    "template": {"type": "object", "required": ["id", "name", "version", "release"]},
+    "compatibility": {"type": "object", "required": ["schema_version", "data_format_version"]},
+    "files": {"type": "object", "required": ["template_base"]},
+    "repository": {"type": "object"}
+  }
+}
