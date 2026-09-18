@@ -1,10 +1,14 @@
+import hashlib
+import json
 import tempfile
+import urllib.parse
 import unittest
 from pathlib import Path
 
 from tools import study_cli
 from tools import template_upgrade
 from tools import validate_domain_pack
+from tools.import_pipeline import ImportPipeline, run_chat_import, run_url_import
 
 
 class StudyCliTests(unittest.TestCase):
@@ -100,7 +104,7 @@ class StudyCliTests(unittest.TestCase):
     def test_v1_upgrade_manifest_is_stable_and_three_way(self):
         root = Path(__file__).resolve().parents[1]
         manifest = study_cli.load_json_file(root / "config" / "template-manifest.json")
-        self.assertEqual(manifest["template_version"], "1.1.1")
+        self.assertEqual(manifest["template_version"], "1.2.0")
         self.assertEqual(manifest["schema_version"], "1.0.0")
         self.assertEqual(manifest["data_format_version"], "1.0.0")
         self.assertEqual(manifest["upgrade_contract"]["user_data_policy"], "preserve")
@@ -179,6 +183,112 @@ class StudyCliTests(unittest.TestCase):
                 "goal-1,Test,study,PLANNED,LOW,2026-01-01,2026-12-31,secret\n", encoding="utf-8")
             errors, warnings, counts = study_cli.validate(root)
             self.assertTrue(any("visibility must be private" in error for error in errors))
+
+    def test_local_import_recurses_moves_and_writes_report(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "inbox" / "nested" / "20260917_notes.txt"
+            source.parent.mkdir(parents=True)
+            source.write_text("study notes", encoding="utf-8")
+            report, items = ImportPipeline(root).run_local()
+            self.assertEqual(items[0].status, "IMPORTED")
+            self.assertFalse(source.exists())
+            self.assertTrue(report.joinpath("import-report.md").exists())
+            self.assertTrue(report.joinpath("import-manifest.json").exists())
+            self.assertTrue(list((root / "artifacts" / "2026").glob("*.txt")))
+
+    def test_local_import_keeps_hash_duplicates_and_renames_name_collisions(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            inbox = root / "inbox"
+            inbox.mkdir(parents=True)
+            first = inbox / "20260917_notes.txt"
+            first.write_text("one", encoding="utf-8")
+            ImportPipeline(root).run_local(batch_id="first")
+            duplicate = inbox / "20260917_other.txt"
+            duplicate.write_text("one", encoding="utf-8")
+            duplicate_report, duplicate_items = ImportPipeline(root).run_local(batch_id="duplicate")
+            self.assertEqual(duplicate_items[0].status, "DUPLICATE")
+            self.assertTrue(duplicate.exists())
+            collision = inbox / "20260917_notes.txt"
+            collision.write_text("two", encoding="utf-8")
+            digest = hashlib.sha256(b"two").hexdigest()[:8]
+            existing = root / "artifacts" / "2026" / f"20260917_20260917_notes_{digest}.txt"
+            existing.parent.mkdir(parents=True, exist_ok=True)
+            existing.write_text("different existing content", encoding="utf-8")
+            report, items = ImportPipeline(root).run_local(batch_id="collision")
+            self.assertEqual(items[0].status, "IMPORTED")
+            self.assertIn("_000", items[0].destination)
+            self.assertTrue("_000" in report.joinpath("import-report.md").read_text(encoding="utf-8"))
+
+    def test_local_import_dry_run_does_not_move_input(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "inbox" / "20260917_dry.txt"
+            source.parent.mkdir(parents=True)
+            source.write_text("dry", encoding="utf-8")
+            _, items = ImportPipeline(root).run_local(dry_run=True, batch_id="dry")
+            self.assertEqual(items[0].status, "VERIFIED")
+            self.assertTrue(source.exists())
+
+    def test_local_import_separates_extraction_analysis(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "inbox" / "20260917_facts.txt"
+            source.parent.mkdir(parents=True)
+            source.write_text("A fact.\n2026-09-17 is mentioned here.", encoding="utf-8")
+            report, items = ImportPipeline(root).run_local(batch_id="extract")
+            self.assertEqual(items[0].extraction_status, "EXTRACTED")
+            analysis = root / items[0].analysis_path
+            self.assertTrue(analysis.exists())
+            self.assertIn("## Facts", analysis.read_text(encoding="utf-8"))
+            self.assertIn("## Inferences and limitations", analysis.read_text(encoding="utf-8"))
+
+    def test_local_import_reports_unsupported_files_without_moving(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "inbox" / "20260917_archive.zip"
+            source.parent.mkdir(parents=True)
+            source.write_bytes(b"not imported")
+            _, items = ImportPipeline(root).run_local(batch_id="unsupported")
+            self.assertEqual(items[0].status, "UNSUPPORTED")
+            self.assertTrue(source.exists())
+
+    def test_url_import_extracts_canonical_and_published_date(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source.html"
+            source.write_text(
+                '<html><head><link rel="canonical" href="https://example.test/post" />'
+                '<meta property="article:published_time" content="2026-09-17T10:00:00+09:00" />'
+                '<title>Example Post</title></head><body>Hello study</body></html>',
+                encoding="utf-8",
+            )
+            report, items = run_url_import(root, [source.as_uri()], batch_id="url")
+            self.assertEqual(items[0].status, "IMPORTED")
+            self.assertEqual(items[0].detected_date, "2026-09-17")
+            source_report = root / items[0].analysis_path
+            self.assertTrue(source_report.exists())
+            self.assertIn("https://example.test/post", source_report.read_text(encoding="utf-8"))
+            self.assertTrue((report / "import-manifest.json").exists())
+
+    def test_chat_import_splits_messages_by_date_and_preserves_source(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "chat.json"
+            source.write_text(
+                json.dumps({"messages": [
+                    {"timestamp": "2026-09-17T09:00:00+09:00", "author": {"role": "user"}, "content": {"parts": ["Day one"]}},
+                    {"timestamp": "2026-09-18T09:00:00+09:00", "author": {"role": "assistant"}, "content": {"parts": ["Day two"]}, "attachments": [{"name": "photo.jpg"}]},
+                ]}),
+                encoding="utf-8",
+            )
+            report, items = run_chat_import(root, [str(source)], batch_id="chat")
+            self.assertTrue(source.exists())
+            self.assertIn("2026-09-17", (root / "records" / "imports" / "chat" / "chat" / "2026-09-17.md").read_text(encoding="utf-8"))
+            self.assertIn("2026-09-18", (root / "records" / "imports" / "chat" / "chat" / "2026-09-18.md").read_text(encoding="utf-8"))
+            self.assertTrue(any("USER_ACTION_REQUIRED" in item.error for item in items))
+            self.assertTrue((report / "import-manifest.json").exists())
 
 
 if __name__ == "__main__":

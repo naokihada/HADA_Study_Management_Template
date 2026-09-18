@@ -9,11 +9,17 @@ import json
 import re
 import shutil
 import sys
+import time
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Iterable
 from zoneinfo import ZoneInfo
+
+try:
+    from tools.import_pipeline import ImportPipeline, run_chat_import, run_url_import
+except ModuleNotFoundError:  # Direct execution: python tools/study_cli.py
+    from import_pipeline import ImportPipeline, run_chat_import, run_url_import
 
 CSV_CONTRACTS = {
     "data/master/goals.csv": ("goal_id", "title", "goal_type", "status", "priority", "start_date", "target_date"),
@@ -167,7 +173,7 @@ def validate_ai_boundary(root: Path, errors: list[str], warnings: list[str]) -> 
     ai_root = root / "AI"
     if not ai_root.exists():
         return
-    allowed = {"README.md", "working", "cache", "reports", "history"}
+    allowed = {"README.md", "working", "cache", "reports", "history", "handoff"}
     for path in ai_root.iterdir():
         if path.name not in allowed:
             errors.append(f"AI boundary violation: unexpected path {path.relative_to(root).as_posix()!r}")
@@ -458,7 +464,7 @@ def summary(root: Path) -> str:
 
 
 def init_project(root: Path) -> str:
-    directories = ["config/schema", "data/learner", "data/learner/history", "data/master", "data/inbox", "plans/default", "records/default/reviews", "artifacts", "AI/working", "AI/cache", "AI/reports", "AI/history", "tools", "tests"]
+    directories = ["config/schema", "data/learner", "data/learner/history", "data/master", "inbox", "plans/default", "records/default/reviews", "records/imports", "artifacts", "AI/working", "AI/cache", "AI/reports", "AI/history", "tools", "tests"]
     created = 0
     for directory in directories:
         path = root / directory
@@ -472,12 +478,17 @@ def main(argv: list[str] | None = None) -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=["init", "validate", "calendar", "photos", "summary", "domain-status", "domain-change", "ai-reset"])
+    parser.add_argument("command", choices=["init", "validate", "calendar", "photos", "summary", "import-inbox", "import-url", "import-chat", "domain-status", "domain-change", "ai-reset"])
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--to", dest="domain_target")
     parser.add_argument("--confirm", action="store_true")
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--apply", action="store_true")
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--batch-id")
+    parser.add_argument("--url", nargs="+")
+    parser.add_argument("--watch", action="store_true")
+    parser.add_argument("--interval", type=int, default=30)
     args = parser.parse_args(argv)
     root = args.root.resolve()
     if args.command == "init":
@@ -491,6 +502,37 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "summary":
         print(summary(root))
+        return 0
+    if args.command == "import-inbox":
+        if args.watch and args.interval < 1:
+            print("ERROR: --interval must be at least 1 second")
+            return 2
+        try:
+            while True:
+                report, items = ImportPipeline(root).run_local(dry_run=args.dry_run, batch_id=args.batch_id)
+                print(f"IMPORT REPORT: {report.relative_to(root).as_posix()}")
+                print("IMPORT COUNTS: " + ", ".join(f"{status}={sum(item.status == status for item in items)}" for status in sorted({item.status for item in items})))
+                if not args.watch:
+                    return 0 if all(item.status in {"IMPORTED", "DUPLICATE", "VERIFIED", "ACCESS_DENIED", "REVIEW_REQUIRED", "UNSUPPORTED"} for item in items) else 1
+                time.sleep(args.interval)
+        except KeyboardInterrupt:
+            print("IMPORT WATCH: stopped by user")
+            return 0
+    if args.command == "import-url":
+        if not args.url:
+            print("ERROR: --url is required")
+            return 2
+        report, items = run_url_import(root, args.url, dry_run=args.dry_run, batch_id=args.batch_id)
+        print(f"IMPORT REPORT: {report.relative_to(root).as_posix()}")
+        print("IMPORT COUNTS: " + ", ".join(f"{status}={sum(item.status == status for item in items)}" for status in sorted({item.status for item in items})))
+        return 0
+    if args.command == "import-chat":
+        if not args.url:
+            print("ERROR: --url is used for one or more chat export files or shared links")
+            return 2
+        report, items = run_chat_import(root, args.url, dry_run=args.dry_run, batch_id=args.batch_id)
+        print(f"IMPORT REPORT: {report.relative_to(root).as_posix()}")
+        print("IMPORT COUNTS: " + ", ".join(f"{status}={sum(item.status == status for item in items)}" for status in sorted({item.status for item in items})))
         return 0
     if args.command == "domain-status":
         print(domain_status(root))

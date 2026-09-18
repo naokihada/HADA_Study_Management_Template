@@ -1,6 +1,6 @@
 # HADA Study Management Template
 
-バージョン: `1.1.1`（Stable v1 baseline）
+バージョン: `1.2.0`（External Import Release）
 
 高校受験、大学受験、資格・技能試験、作品制作をファイルベースで管理する
 汎用テンプレートです。
@@ -19,6 +19,46 @@ python tools/study_cli.py domain-status
 python tools/study_cli.py domain-change --to soulcalibur-6
 python tools/study_cli.py ai-reset
 ```
+
+## Python setup and optional dependencies
+
+基本的な検証、カレンダー、写真一覧、計画確認だけなら、追加パッケージなしで動作します。
+
+PDFのテキスト抽出や画像情報の読み取りを使う場合は、リポジトリのルートで次を実行してください。
+
+```text
+python -m venv .venv
+```
+
+Windows PowerShellの場合:
+
+```text
+.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+macOS・Linuxの場合:
+
+```text
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+`requirements.txt`には、PDF抽出用の`pypdf`と画像解析用の`Pillow`が含まれています。インストールできない場合でも、コアCLIは動作します。OCRを使う場合は、Pythonパッケージとは別にTesseract本体が必要です。
+
+外部取り込み対応版では、次のコマンドを使えます。
+
+```text
+python -m tools.study_cli import-inbox --dry-run
+python -m tools.study_cli import-inbox
+python -m tools.study_cli import-inbox --watch --interval 30
+python -m tools.study_cli import-url --url https://example.com/page
+python -m tools.study_cli import-chat --url chat-export.json
+```
+
+`--dry-run`はファイルを移動しません。外部URLやチャットの元データは自動削除されません。
 
 Template本体には学習者の実データや写真を含めません。
 

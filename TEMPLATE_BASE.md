@@ -2,8 +2,8 @@
 
 - Template ID: `hada-study-management-template`
 - Template Name: `HADA Study Management Template`
-- Version: `1.1.1`
-- Release: `v1.1.1`
+- Version: `1.2.0`
+- Release: `v1.2.0`
 - Repository: `HADA_Study_Management_Template`
 - Role: Public reusable template
 

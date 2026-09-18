@@ -1,6 +1,6 @@
 {
   "template_id": "hada-study-management-template",
-  "template_version": "1.1.1",
+  "template_version": "1.2.0",
   "schema_version": "1.0.0",
   "data_format_version": "1.0.0",
   "ownership": {
@@ -11,19 +11,19 @@
   "migration_paths": [
     {
       "from": "1.0.0",
-      "to": "1.1.1",
+      "to": "1.2.0",
       "status": "current",
       "strategy": "three-way-review",
       "automatic_data_migration": false
     }
   ],
   "upgrade_contract": {
-    "baseline": "1.1.1",
+    "baseline": "1.2.0",
     "comparison": ["previous_template", "current_project", "new_template"],
     "user_data_policy": "preserve",
     "automatic_deletion": false,
     "git_operations": "manual",
     "unknown_state": "review_required"
   },
-  "notes": "v1.1.1 is the current template baseline; schema and data format remain 1.0.0."
+  "notes": "v1.2.0 is the current template baseline; schema and data format remain 1.0.0. External import is included."
 }
