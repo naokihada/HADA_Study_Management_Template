@@ -128,5 +128,19 @@ def main() -> int:
     return 0
 
 
+try:
+    from tools.template_upgrade_v13 import apply_safe, files, ownership, plan, plan_details, run_upgrade, validate_manifest
+except ModuleNotFoundError:
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from tools.template_upgrade_v13 import apply_safe, files, ownership, plan, plan_details, run_upgrade, validate_manifest
+
+
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        from tools.template_upgrade_v13 import main as v13_main
+    except ModuleNotFoundError:
+        import sys
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+        from tools.template_upgrade_v13 import main as v13_main
+    raise SystemExit(v13_main())

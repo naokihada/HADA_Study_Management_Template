@@ -1,0 +1,8 @@
+{
+  "version": "1.3.0",
+  "directories": ["working", "cache", "reports"],
+  "files": [{"source": "README.md", "target": "README.md"}],
+  "restored_content": true,
+  "reset_scope": "all_children_of_AI",
+  "notes": "AI is disposable. User data, settings, consent records, and upgrade evidence are outside this structure."
+}

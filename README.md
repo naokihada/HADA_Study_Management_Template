@@ -1,6 +1,6 @@
 # HADA Study Management Template
 
-バージョン: `1.2.0`（External Import Release）
+バージョン: `1.3.0`（Migration-Safe Release）
 
 高校受験、大学受験、資格・技能試験、作品制作をファイルベースで管理する
 汎用テンプレートです。
@@ -8,7 +8,7 @@
 v1は、学習記録、JIRA型の計画、試験・出願日程、任意の写真の日付グループ化、
 軽量な検証を対象とします。Web、通知、グラフ、AI採点はv1の対象外です。
 
-運用上の注意は [AGENTS.md](AGENTS.md)、用途別の使い方は [docs/guides/README.md](docs/guides/README.md) を参照してください。
+運用上の注意は [AGENTS.md](AGENTS.md) と [Template Upgrade](docs/template-upgrade.md)、AI作業領域の境界は [AI/README.md](AI/README.md)、用途別の使い方は [docs/guides/README.md](docs/guides/README.md) を参照してください。
 
 ```text
 python tools/study_cli.py validate
@@ -112,6 +112,17 @@ Template本体には学習者の実データや写真を含めません。
 - 同一ゲームファミリー内の別タイトル・別モード
 
 初期化後のドメインはロックされます。関連変更は確認付き、非互換変更は警告と履歴保存を伴う強制変更として扱います。
+
+AI Resetは実験的・上級者向けの機能です。実行前にdry-runを確認してください。
+`--apply`を指定すると`AI/`の全内容を削除し、リポジトリ内のバージョン管理された
+構造と`AI/README.md`を復元します。ユーザーデータ、承認ログ、更新証跡は
+`AI/`の外に保存してください。
+
+### Template upgrade safety
+
+v1.3.0では、旧バージョンからの更新をP/C/N三者比較とCandidateで確認します。
+ユーザーデータ、写真、`tmp/`、日付不明ファイル、カスタム依存関係を自動削除・
+リネームしません。詳細は [Template Upgrade](docs/template-upgrade.md) を参照してください。
 
 ## Disclaimer and freedom of use
 

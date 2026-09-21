@@ -1,6 +1,6 @@
 # Study Management CLI
 
-The v1.1.1 foundation uses the Python standard library only.
+The v1.3.0 foundation uses the Python standard library for its core CLI.
 
 Run commands from the repository root:
 
@@ -22,8 +22,10 @@ directories only and never overwrites existing files.
 
 `domain-status` is read-only. `domain-change` is a dry-run unless `--confirm`
 is supplied; use `--force --confirm` only after reviewing the warning for an
-incompatible domain. `ai-reset` is a dry-run unless `--apply` is supplied and
-targets only disposable AI working directories.
+incompatible domain. `ai-reset` is a dry-run unless `--apply` is supplied.
+It deletes all children of `AI/` and restores the versioned structure and
+`AI/README.md`; it never deletes user data outside `AI/`. This is experimental
+and potentially destructive. Use `--source latest` only after reviewing the selected structure.
 
 The CLI discovers every project directory under `plans/<project-id>/` and
 `records/<project-id>/`; `default` is only the included sample project name,
@@ -36,6 +38,13 @@ Template upgrades use a read-only dry run by default:
 
 ```text
 python tools/template_upgrade.py --previous P --current C --new N --manifest config/template-manifest.json
+```
+
+For an older project, prepare a retained Candidate without modifying the
+current project:
+
+```text
+python tools/template_upgrade.py --previous P --current C --new N --manifest N/config/template-manifest.json --release-version v1.3.0 --legacy-bootstrap --candidate-only --candidate PATH_TO_CANDIDATE
 ```
 
 Add `--apply` only when safe AUTO template-owned changes are intentionally

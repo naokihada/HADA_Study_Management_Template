@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.3.0
+
+- Added legacy bootstrap and Candidate-only migration preparation.
+- Added safe upgrade inventories that ignore build artifacts while preserving user data.
+- Added expanded ownership, version-carrier, and public artifact boundary checks.
+- Added synchronized Dev, Template, and Sample release-set validation.
+- Preserved public `AGENTS.md` and `AI/README.md` as required operational files.
+- Added manifest-driven public boundary checks and full AI Reset structure restoration.
+- Schema and data format remain `1.0.0`.
+
 ## v1.2.0
 
 - Added recursive Local Inbox import with SHA-256 duplicate protection.

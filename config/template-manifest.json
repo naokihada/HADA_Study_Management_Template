@@ -1,29 +1,45 @@
 {
   "template_id": "hada-study-management-template",
-  "template_version": "1.2.0",
+  "template_version": "1.3.0",
   "schema_version": "1.0.0",
   "data_format_version": "1.0.0",
   "ownership": {
-    "template_owned": ["AGENTS.md", "README.md", "TEMPLATE_BASE.md", "config/**", "tools/**", "tests/**", "templates/**", "prompts/**"],
-    "user_owned": ["data/**", "plans/**", "records/**", "artifacts/**", "config/project-state.yaml", "config/domain-compatibility.yaml"],
-    "generated": ["reports/**", "records/**/summaries/**"]
+    "template_owned": [".gitignore", "AGENTS.md", "AI/README.md", "README.md", "CHANGELOG.md", "DISCLAIMER.md", "LICENSE", "TEMPLATE_BASE.md", "requirements.txt", "config/**", "docs/template-upgrade.md", "docs/releases/**", "tools/**", "tests/**", "templates/**", "prompts/**"],
+    "user_owned": ["data/**", "plans/**", "records/**", "artifacts/**", "logs/external-ai/**", "config/project-state.yaml", "config/domain-compatibility.yaml", "config/import-policy.yaml", "requirements-codex.txt"],
+    "generated": ["reports/**", "records/**/summaries/**"],
+    "reference": ["examples/**", "docs/guides/**"],
+    "master": [],
+    "unknown": [],
+    "review_required": ["AI/working/**", "AI/cache/**", "AI/reports/**", "AI/history/**", "AI/handoff/**", "tmp/**", "records/template-upgrades/**"]
+  },
+  "public_artifact_contract": {
+    "required_files": ["AGENTS.md", "AI/README.md"],
+    "allowed_files": ["AGENTS.md", "AI/README.md"],
+    "forbidden_files": ["SPEC.md", "ReSPEC.md", "ReSPEC_COMPARISON.md"],
+    "forbidden_prefixes": ["AI/", "records/template-upgrades/", "logs/external-ai/", "tmp/"],
+    "template_forbidden_prefixes": ["data/", "plans/", "records/", "artifacts/"]
   },
   "migration_paths": [
     {
       "from": "1.0.0",
-      "to": "1.2.0",
+      "to": "1.3.0",
       "status": "current",
       "strategy": "three-way-review",
       "automatic_data_migration": false
     }
   ],
   "upgrade_contract": {
-    "baseline": "1.2.0",
+    "baseline": "1.3.0",
     "comparison": ["previous_template", "current_project", "new_template"],
     "user_data_policy": "preserve",
     "automatic_deletion": false,
     "git_operations": "manual",
-    "unknown_state": "review_required"
+    "unknown_state": "review_required",
+    "candidate_required": true,
+    "legacy_bootstrap": true,
+    "evidence_root": "records/template-upgrades",
+    "status_codes": {"SUCCESS": 0, "REVIEW_REQUIRED": 1, "BLOCKED": 2, "FAILED": 3},
+    "source_policy": {"allowed": ["stable_release"], "disallowed_default": ["main", "HEAD", "unpublished_commit", "prerelease"]}
   },
-  "notes": "v1.2.0 is the current template baseline; schema and data format remain 1.0.0. External import is included."
+  "notes": "v1.3.0 is the current public Template baseline; schema and data format remain 1.0.0. Legacy bootstrap and release boundary validation are included."
 }

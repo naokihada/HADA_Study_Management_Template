@@ -1,5 +1,6 @@
 import hashlib
 import json
+import shutil
 import tempfile
 import urllib.parse
 import unittest
@@ -8,6 +9,7 @@ from pathlib import Path
 from tools import study_cli
 from tools import template_upgrade
 from tools import validate_domain_pack
+from tools import validate_release_artifact
 from tools.import_pipeline import ImportPipeline, run_chat_import, run_url_import
 
 
@@ -104,13 +106,35 @@ class StudyCliTests(unittest.TestCase):
     def test_v1_upgrade_manifest_is_stable_and_three_way(self):
         root = Path(__file__).resolve().parents[1]
         manifest = study_cli.load_json_file(root / "config" / "template-manifest.json")
-        self.assertEqual(manifest["template_version"], "1.2.0")
+        self.assertEqual(manifest["template_version"], "1.3.0")
         self.assertEqual(manifest["schema_version"], "1.0.0")
         self.assertEqual(manifest["data_format_version"], "1.0.0")
         self.assertEqual(manifest["upgrade_contract"]["user_data_policy"], "preserve")
         self.assertEqual(manifest["upgrade_contract"]["comparison"], ["previous_template", "current_project", "new_template"])
         self.assertFalse(manifest["upgrade_contract"]["automatic_deletion"])
+        self.assertTrue(manifest["upgrade_contract"]["candidate_required"])
+        self.assertTrue(manifest["upgrade_contract"]["legacy_bootstrap"])
         self.assertEqual(template_upgrade.validate_manifest(manifest), [])
+
+    def test_public_artifact_contract_requires_operational_files(self):
+        root = Path(__file__).resolve().parents[1]
+        artifact_kind = "sample" if (root / "data").exists() else "template"
+        result = validate_release_artifact.validate(root, expected_release="v1.3.0", artifact_kind=artifact_kind)
+        self.assertEqual(result["status"], "SUCCESS", "\n".join(result["errors"]))
+        manifest = study_cli.load_json_file(root / "config" / "template-manifest.json")
+        contract = manifest["public_artifact_contract"]
+        self.assertEqual(set(contract["required_files"]), {"AGENTS.md", "AI/README.md"})
+
+    def test_public_artifact_contract_rejects_missing_agents(self):
+        root = Path(__file__).resolve().parents[1]
+        artifact_kind = "sample" if (root / "data").exists() else "template"
+        with tempfile.TemporaryDirectory() as directory:
+            candidate = Path(directory) / "candidate"
+            shutil.copytree(root, candidate, ignore=shutil.ignore_patterns(".git", "__pycache__"))
+            (candidate / "AGENTS.md").unlink()
+            result = validate_release_artifact.validate(candidate, expected_release="v1.3.0", artifact_kind=artifact_kind)
+            self.assertEqual(result["status"], "FAILED")
+            self.assertIn("required public file is missing: AGENTS.md", result["errors"])
 
     def test_domain_pack_schema(self):
         root = Path(__file__).resolve().parents[1]
@@ -146,12 +170,25 @@ class StudyCliTests(unittest.TestCase):
             (root / "AI" / "working").mkdir(parents=True)
             (root / "AI" / "cache").mkdir(parents=True)
             (root / "AI" / "reports").mkdir(parents=True)
+            (root / "AI" / "old").mkdir(parents=True)
+            (root / "AI" / "old" / "discard.txt").write_text("discard", encoding="utf-8")
             (root / "data").mkdir()
             (root / "data" / "user.txt").write_text("keep", encoding="utf-8")
+            (root / "config").mkdir()
+            (root / "config" / "template-manifest.json").write_text('{"template_version":"1.3.0"}', encoding="utf-8")
+            structure = root / "templates" / "ai-structure" / "v1.3.0"
+            structure.mkdir(parents=True)
+            (structure / "manifest.json").write_text(
+                '{"directories":["working","cache","reports"],"files":[{"source":"README.md","target":"README.md"}]}',
+                encoding="utf-8",
+            )
+            (structure / "README.md").write_text("restored", encoding="utf-8")
             self.assertIn("DRY-RUN", study_cli.ai_reset(root, False))
             self.assertTrue((root / "AI" / "working").exists())
             self.assertIn("APPLIED", study_cli.ai_reset(root, True))
-            self.assertFalse((root / "AI" / "working").exists())
+            self.assertTrue((root / "AI" / "working").exists())
+            self.assertFalse((root / "AI" / "old").exists())
+            self.assertEqual((root / "AI" / "README.md").read_text(encoding="utf-8"), "restored")
             self.assertEqual((root / "data" / "user.txt").read_text(encoding="utf-8"), "keep")
 
     def test_ai_boundary_rejects_user_data_directories(self):

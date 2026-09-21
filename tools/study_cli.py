@@ -149,23 +149,98 @@ def change_domain(root: Path, target: str, confirm: bool, force: bool) -> str:
     return f"APPLIED: domain changed from {current!r} to {target!r}; history preserved"
 
 
-def ai_reset(root: Path, apply: bool) -> str:
+def load_ai_structure_manifest(root: Path, source: str) -> tuple[Path, dict]:
+    manifest = load_json_file(root / "config" / "template-manifest.json", {})
+    structures_root = root / "templates" / "ai-structure"
+    if source == "current":
+        version = str(manifest.get("template_version", ""))
+        candidates = [structures_root / f"v{version}" / "manifest.json", structures_root / version / "manifest.json"]
+    elif source == "latest":
+        candidates = sorted(structures_root.glob("v*/manifest.json"), reverse=True)
+    else:
+        raise ValueError("AI structure source must be current or latest")
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate, load_json_file(candidate, {})
+    raise FileNotFoundError(f"AI structure manifest was not found for source={source}")
+
+
+def validate_ai_structure_directories(manifest: dict) -> list[str]:
+    directories = manifest.get("directories", [])
+    if not isinstance(directories, list) or not directories:
+        return ["AI structure manifest must define at least one directory"]
+    errors: list[str] = []
+    for directory in directories:
+        path = Path(str(directory))
+        if path.is_absolute() or ".." in path.parts:
+            errors.append(f"AI structure directory escapes structure root: {directory!r}")
+    return errors
+
+
+def validate_ai_structure_files(manifest: dict) -> list[str]:
+    files = manifest.get("files", [])
+    if files is None:
+        return []
+    if not isinstance(files, list):
+        return ["AI structure manifest files must be a list"]
+    errors: list[str] = []
+    for entry in files:
+        if not isinstance(entry, dict):
+            errors.append(f"AI structure file entry must be an object: {entry!r}")
+            continue
+        for field in ("source", "target"):
+            value = str(entry.get(field, ""))
+            path = Path(value)
+            if not value or path.is_absolute() or ".." in path.parts:
+                errors.append(f"AI structure file {field} escapes its boundary: {value!r}")
+    return errors
+
+
+def ai_reset(root: Path, apply: bool, source: str = "current") -> str:
     ai_root = (root / "AI").resolve()
     root_resolved = root.resolve()
     if ai_root.parent != root_resolved:
         return "ERROR: AI reset target is outside the project root"
-    targets = [path for path in (ai_root / name for name in ("working", "cache", "reports")) if path.exists()]
-    if not targets:
-        return "AI RESET: no disposable AI directories found"
-    lines = ["AI RESET PLAN:"] + [f"- {path.relative_to(root_resolved).as_posix()}" for path in targets]
+    if ai_root.exists() and (ai_root.is_symlink() or not ai_root.is_dir()):
+        return "ERROR: AI reset root must be a real directory"
+    try:
+        structure_path, structure = load_ai_structure_manifest(root, source)
+    except (FileNotFoundError, ValueError) as exc:
+        return f"ERROR: {exc}"
+    structure_errors = validate_ai_structure_directories(structure) + validate_ai_structure_files(structure)
+    if structure_errors:
+        return "ERROR: " + "; ".join(structure_errors)
+    targets = sorted(ai_root.iterdir(), key=lambda path: path.name) if ai_root.exists() else []
+    lines = ["AI RESET PLAN:", f"- source: {source} ({structure_path.relative_to(root_resolved).as_posix()})"]
+    lines.extend(f"- delete: {path.relative_to(root_resolved).as_posix()}" for path in targets)
+    lines.extend(f"- restore: AI/{Path(directory).as_posix()}" for directory in structure["directories"])
+    lines.extend(f"- restore: AI/{Path(entry['target']).as_posix()}" for entry in structure.get("files", []))
     if not apply:
-        lines.append("DRY-RUN: no files changed; pass --apply to remove only these directories")
+        lines.append("DRY-RUN: no files changed; pass --apply to delete AI contents and restore the disposable structure")
         return "\n".join(lines)
     for path in targets:
         if path.is_symlink() or not path.resolve().is_relative_to(ai_root):
             return f"ERROR: unsafe AI reset target: {path}"
-        shutil.rmtree(path)
-    lines.append("APPLIED: disposable AI directories removed; data/ and artifacts/ were not changed")
+        if path.is_dir():
+            shutil.rmtree(path)
+        else:
+            path.unlink()
+    ai_root.mkdir(parents=True, exist_ok=True)
+    for directory in structure["directories"]:
+        target = ai_root / str(directory)
+        if not target.resolve().is_relative_to(ai_root):
+            return f"ERROR: unsafe AI restore target: {directory}"
+        target.mkdir(parents=True, exist_ok=True)
+    for entry in structure.get("files", []):
+        source_path = structure_path.parent / str(entry["source"])
+        target = ai_root / str(entry["target"])
+        if not source_path.is_file():
+            return f"ERROR: AI restore source is missing: {entry['source']}"
+        if not target.resolve().is_relative_to(ai_root):
+            return f"ERROR: unsafe AI restore target: {entry['target']}"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source_path, target)
+    lines.append("APPLIED: all AI contents were removed and the disposable structure was restored")
     return "\n".join(lines)
 
 
@@ -173,7 +248,7 @@ def validate_ai_boundary(root: Path, errors: list[str], warnings: list[str]) -> 
     ai_root = root / "AI"
     if not ai_root.exists():
         return
-    allowed = {"README.md", "working", "cache", "reports", "history", "handoff"}
+    allowed = {"README.md", "working", "cache", "reports"}
     for path in ai_root.iterdir():
         if path.name not in allowed:
             errors.append(f"AI boundary violation: unexpected path {path.relative_to(root).as_posix()!r}")
@@ -484,6 +559,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--confirm", action="store_true")
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--apply", action="store_true")
+    parser.add_argument("--source", choices=["current", "latest"], default="current")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--batch-id")
     parser.add_argument("--url", nargs="+")
@@ -545,7 +621,7 @@ def main(argv: list[str] | None = None) -> int:
         print(output)
         return 0 if output.startswith(("CLASSIFICATION:", "DRY-RUN:", "APPLIED:", "WARNING:")) else 1
     if args.command == "ai-reset":
-        print(ai_reset(root, args.apply))
+        print(ai_reset(root, args.apply, args.source))
         return 0
     errors, warnings, counts = validate(root)
     for warning in warnings:
